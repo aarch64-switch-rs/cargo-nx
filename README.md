@@ -11,7 +11,7 @@ Assuming you have `cargo` installed, it's just a matter two steps.
 1) Install `xargo`:
 
     ```bash
-    cargo install cargo
+    cargo install xargo
     ```
 
 2) Install `cargo-nx`:
