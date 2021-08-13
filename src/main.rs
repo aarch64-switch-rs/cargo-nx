@@ -144,7 +144,7 @@ fn main() {
             .arg(Arg::with_name("verbose")
                 .short("v")
                 .long("verbose")
-                .help("Show extra information")
+                .help("Displays extra information during the build process")
                 .required(false)))
         .get_matches();
 

@@ -1,21 +1,50 @@
-# cargo nx
+# cargo-nx
 
 ## Introduction
 
-*cargo nx* is a simple build command for projects based on this organization's libraries and tools, to avoid having to mess with makefiles, scripts or having several copies of the same linker/target files for every single project, while also including support for generating various formats after projects are compiled.
+`cargo-nx` is a simple build command for projects based on this organization's libraries and tools, to avoid having to mess with makefiles, scripts or having several copies of the same linker/target files for every single project, while also including support for generating various formats after projects are compiled.
 
 ## Installation
 
-Assuming you have `cargo` installed, it's just a matter of running `cargo install cargo-nx --git https://github.com/aarch64-switch-rs/cargo-nx`
-will install the `cargo-nx` executable, which can also be simply ran as a cargo command, `cargo nx`.
+Assuming you have `cargo` installed, it's just a matter two steps.
 
-## Project formats
+1) Install `xargo`:
 
-Extra fields used for building are placed inside `[package.metadata.sprinkle.<format>]` in Cargo.toml. These fields vary depending on the project's format:
+    ```bash
+    cargo install cargo
+    ```
 
-### NRO
+2) Install `cargo-nx`:
 
-Projects which generate homebrew NRO binaries don't need any mandatory fields/files, but can set optional ones.
+    ```bash
+    cargo install cargo-nx --git https://github.com/aarch64-switch-rs/cargo-nx
+    ```
+
+## Usage
+
+First of all, the program can be executed as `cargo-nx` or simply as a cargo subcommand, `cargo nx`.
+
+The only mandatory input is the build profile, which can be either `dev` or `release`.
+
+Other optional parameters/flags:
+
+- `-p <path>`, `--path=<path>`: Specifies a path with a crate to build (containing `Cargo.toml`, etc.), since the current directory is used by default otherwise.
+
+- `-tp <triple>`, `--triple=<triple>`: Specifies the target triple, which is "aarch64-none-elf" by default.
+
+- `-ctg`, `--use-custom-target`: Notifies the program to not use the default target JSON/linker script, which can be used to use custom ones.
+
+- `-v`, `--verbose`: Displays extra information during the build process.
+
+### Build formats
+
+Build format fields used for building must be placed placed inside `[package.metadata.nx.<format>]` in `Cargo.toml`. These fields vary depending on the project's format.
+
+The program itself detects the target format when parsing `Cargo.toml`. Note that multiple formats at the same time are not currently supported.
+
+#### NRO
+
+Projects which generate homebrew NRO binaries don't have any mandatory fields, but only optional ones.
 
 - Example:
 
@@ -32,38 +61,36 @@ icon = "icon.jpg"
 nacp = { name = "Sample project", author = "XorTroll", version = "0.1 beta" }
 ```
 
-> Note: the `romfs` and `icon` fields must point to items located in the same directory as Cargo.toml!
+> Note: the `romfs` and `icon` fields must point to items located relative to the project's directory
 
-#### NACP fields
+The fields present on the `nacp` object, all of them optional, are the following:
 
-> Note: every fields are optional!
+| Field             | Description                                       | Default value              |
+|:----------------- |:-------------------------------------------------:| --------------------------:|
+| name              | The application name                              | Unknown Application        |
+| author            | The application author                            | Unknown Author             |
+| version           | The application version                           | 1.0.0                      |
+| title_id          | The application ID                                | 0000000000000000           |
+| dlc_base_title_id | The base ID of all the application's DLC          | title_id + 0x1000          |
+| lang (object)     | Different names/authors depending of the language | values above for all langs |
 
-| Field             | Description                                      | Default value       |
-| ----------------- |:------------------------------------------------:| -------------------:|
-| name              | The application name.                            | Unknown Application |
-| author            | The application author.                          | Unknown Author      |
-| version           | The application version.                         | 1.0.0               |
-| title_id          | The application title id.                        | 0000000000000000    |
-| dlc_base_title_id | The base id of all the title DLC.                | title_id + 0x1000   |
-| lang (object)     | Different name/author depending of the language  | use name and author |
-
-| Supported Languages|
-|:------------------:|
-| en-US              |
-| en-GB              |
-| ja                 |
-| fr                 |
-| de                 |
-| es-419             |
-| es                 |
-| it                 |
-| nl                 |
-| fr-CA              |
-| pt                 |
-| ru                 |
-| ko                 |
-| zh-TW              |
-| zh-CN              |
+| Language codes      | Corresponding names    |
+|:-------------------:|:----------------------:|
+| en-US               | American English       |
+| en-GB               | British English        |
+| ja                  | Japanese               |
+| fr                  | French                 |
+| de                  | German                 |
+| es-419              | Latin-American Spanish |
+| es                  | Spanish                |
+| it                  | Italian                |
+| nl                  | Dutch                  |
+| fr-CA               | Canadian French        |
+| pt                  | Portuguese             |
+| ru                  | Russian                |
+| ko                  | Korean                 |
+| zh-TW               | Chinese (Traditional)  |
+| zh-CN               | Chinese (Simplified)   |
 
 - Example with specific languages:
 
@@ -76,15 +103,18 @@ edition = "2018"
 
 [package.metadata.nx.nro]
 nacp = { name = "A", author = "B", version = "0.2 beta", lang = { ja = { name = "J" }, es = { author = "X" }, it = { name = "I", author = "T" } } }
-
-# Result:
-# - Japanese: "J", "B"
-# - Spanish: "A", "X"
-# - Italian: "I", "T"
-# - Other languages: "A", "B"
 ```
 
-> Note: only `name` and `author` can be language-specific, other parameters such as `titleid` or `version` are not!
+```bash
+Names/authors produced above:
+
+- Japanese: "J", "B"
+- Spanish: "A", "X"
+- Italian: "I", "T"
+- Other languages: "A", "B"
+```
+
+> Note: therefore, only `name` and `author` fields can be language-specific
 
 ### NSP
 
@@ -103,18 +133,9 @@ edition = "2018"
 npdm = "npdm.json"
 ```
 
-> Note: the NPDM JSON file follows the same format used in most homebrews (check projects like Atmosphere, emuiibo, ldn_mitm...) and must be located in the same directory as Cargo.toml!
-
-## Building
-
-> Command: `sprinkle <format> [<optional-extra-cargo-arguments>]`
-
-> Available formats (listed above): `nro`, `nsp`
-
-Running this command will (among other minor details) run `xargo build` and, after building the project, will generate the specific files depending on the project build format.
-
-A default target is used, whose JSON specs are included within sprinkle itself (check [here](/specs)). Support for custom targets is planned but not supported yet.
+> Note: the NPDM JSON file follows the same format used in most other homebrews (check projects like [Atmosphere](https://github.com/Atmosphere-NX/Atmosphere/blob/master/stratosphere/sm/sm.json), [emuiibo](https://github.com/XorTroll/emuiibo/blob/master/emuiibo/npdm.json), [ldn_mitm](https://github.com/spacemeowx2/ldn_mitm/blob/master/ldn_mitm/res/app.json)...) and, like with the paths in the NRO format, it must be relative to the project's directory
 
 ## Credits
 
-- *linkle* project and its developers for the base of this fork
+- [linkle](https://github.com/MegatonHammer/linkle) libraries as the core element of this project
+- [cargo-count](https://github.com/kbknapp/cargo-count) as the example followed to make a cargo subcommand project
