@@ -26,7 +26,7 @@ version = "0.1.0"
 authors = ["XorTroll"]
 edition = "2018"
 
-[package.metadata.sprinkle.nro]
+[package.metadata.nx.nro]
 romfs = "romfs_dir"
 icon = "icon.jpg"
 nacp = { name = "Sample project", author = "XorTroll", version = "0.1 beta" }
@@ -74,7 +74,7 @@ version = "0.2.0"
 authors = ["XorTroll"]
 edition = "2018"
 
-[package.metadata.sprinkle.nro]
+[package.metadata.nx.nro]
 nacp = { name = "A", author = "B", version = "0.2 beta", lang = { ja = { name = "J" }, es = { author = "X" }, it = { name = "I", author = "T" } } }
 
 # Result:
@@ -99,7 +99,7 @@ version = "0.2.10"
 authors = ["XorTroll"]
 edition = "2018"
 
-[package.metadata.sprinkle.nsp]
+[package.metadata.nx.nsp]
 npdm = "npdm.json"
 ```
 
