@@ -114,9 +114,9 @@ Names/authors produced above:
 - Other languages: "A", "B"
 ```
 
-> Note: therefore, only `name` and `author` fields can be language-specific
+> Note: only `name` and `author` fields can be language-specific
 
-### NSP
+#### NSP
 
 Projects which generate sysmodule NSP exefs packages need a single, mandatory field for the NPDM data:
 
