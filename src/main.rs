@@ -183,7 +183,7 @@ fn main() {
         println!("Compiling and generating NRO...");
     }
     else {
-        panic!("Error: no target formats in Cargo.toml...");
+        println!("No target formats were found in Cargo.toml...");
     }
 
     let rust_target_path = match env::var("RUST_TARGET_PATH") {
@@ -230,22 +230,23 @@ fn main() {
     let reader = BufReader::new(command.stdout.take().unwrap());
     for message in Message::parse_stream(reader) {
         match message {
-            Ok(Message::CompilerArtifact(ref artifact))
-                if artifact.target.kind.contains(&"bin".into()) || artifact.target.kind.contains(&"cdylib".into()) => {
-                let package: &Package = match metadata.packages.iter().find(|v| v.id == artifact.package_id) {
-                    Some(v) => v,
-                    None => continue,
-                };
-
-                let root = package.manifest_path.parent().unwrap();
-
-                if is_nsp {
-                    let nsp_metadata: NspMetadata = serde_json::from_value(metadata_v.pointer("/nx/nsp").cloned().unwrap()).unwrap_or_default();
-                    handle_nsp_format(root, artifact, nsp_metadata);
-                }
-                else if is_nro {
-                    let nro_metadata: NroMetadata = serde_json::from_value(metadata_v.pointer("/nx/nro").cloned().unwrap()).unwrap_or_default();
-                    handle_nro_format(root, artifact, nro_metadata);
+            Ok(Message::CompilerArtifact(ref artifact)) => {
+                if artifact.target.kind.contains(&"bin".into()) || artifact.target.kind.contains(&"cdylib".into()) {
+                    let package: &Package = match metadata.packages.iter().find(|v| v.id == artifact.package_id) {
+                        Some(v) => v,
+                        None => continue,
+                    };
+    
+                    let root = package.manifest_path.parent().unwrap();
+    
+                    if is_nsp {
+                        let nsp_metadata: NspMetadata = serde_json::from_value(metadata_v.pointer("/nx/nsp").cloned().unwrap()).unwrap_or_default();
+                        handle_nsp_format(root, artifact, nsp_metadata);
+                    }
+                    else if is_nro {
+                        let nro_metadata: NroMetadata = serde_json::from_value(metadata_v.pointer("/nx/nro").cloned().unwrap()).unwrap_or_default();
+                        handle_nro_format(root, artifact, nro_metadata);
+                    }
                 }
             }
             Ok(Message::CompilerMessage(msg)) => {
