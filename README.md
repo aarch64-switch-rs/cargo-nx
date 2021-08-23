@@ -22,11 +22,11 @@ Assuming you have `cargo` installed, it's just a matter two steps.
 
 ## Usage
 
-First of all, the program can be executed as `cargo-nx` or simply as a cargo subcommand, `cargo nx`.
+First of all, the program can be executed as `cargo-nx` or simply as a cargo subcommand, `cargo nx`. It's quite similar to the normal `cargo build` subcommand.
 
-The only mandatory input is the build profile, which can be either `dev` or `release`.
+Available parameters/flags:
 
-Other optional parameters/flags:
+- `-r`, `--release`: Builds on release profile, same as the normal `cargo build --release` option.
 
 - `-p <path>`, `--path=<path>`: Specifies a path with a crate to build (containing `Cargo.toml`, etc.), since the current directory is used by default otherwise.
 

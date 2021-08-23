@@ -118,10 +118,11 @@ fn main() {
         .subcommand(SubCommand::with_name("nx")
             .author(crate_authors!(""))
             .about(crate_description!())
-            .arg(Arg::with_name("profile")
-                .help("Build profile")
-                .possible_values(&["dev", "release"])
-                .required(true))
+            .arg(Arg::with_name("release")
+                .short("r")
+                .long("release")
+                .help("Builds on release profile")
+                .required(false))
             .arg(Arg::with_name("path")
                 .short("p")
                 .long("path")
@@ -150,11 +151,14 @@ fn main() {
 
     let nx_matches = matches.subcommand_matches("nx").unwrap();
 
-    let is_verbose = nx_matches.value_of("verbose").is_some();
+    let is_verbose = nx_matches.is_present("verbose");
 
-    let profile = nx_matches.value_of("profile").unwrap();
+    let is_release = nx_matches.is_present("release");
     if is_verbose {
-        println!("Profile: {}", profile);
+        println!("Profile: {}", match is_release {
+            true => "release",
+            false => "dev"
+        });
     }
 
     let path = match nx_matches.value_of("path") {
@@ -172,7 +176,6 @@ fn main() {
 
     let is_nsp = metadata_v.pointer("/nx/nsp").is_some();
     let is_nro = metadata_v.pointer("/nx/nro").is_some();
-
     if is_nsp && is_nro {
         panic!("Error: multiple target formats are not yet supported...");
     }
@@ -212,15 +215,19 @@ fn main() {
         println!("Build target path: {}", build_target_path);
     }
 
-    let xargo_args: Vec<String> = vec![
+    let mut build_args: Vec<String> = vec![
         String::from("build"),
         format!("--target={}", triple),
-        String::from("--message-format=json-diagnostic-rendered-ansi"),
-        format!("--{}", profile)
+        String::from("--message-format=json-diagnostic-rendered-ansi")
     ];
+    if is_release {
+        build_args.push(String::from("--release"));
+    }
+
+    // TODO: eventually move from xargo back to cargo when things are ready
 
     let mut command = Command::new("xargo")
-        .args(&xargo_args)
+        .args(&build_args)
         .stdout(Stdio::piped())
         .env("RUST_TARGET_PATH", build_target_path)
         .current_dir(path)
