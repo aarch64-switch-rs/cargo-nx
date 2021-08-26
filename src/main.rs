@@ -224,9 +224,7 @@ fn main() {
         build_args.push(String::from("--release"));
     }
 
-    // TODO: eventually move from xargo back to cargo when things are ready
-
-    let mut command = Command::new("xargo")
+    let mut command = Command::new("cargo")
         .args(&build_args)
         .stdout(Stdio::piped())
         .env("RUST_TARGET_PATH", build_target_path)

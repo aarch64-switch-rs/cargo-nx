@@ -6,12 +6,12 @@
 
 ## Installation
 
-Assuming you have `cargo` installed, it's just a matter two steps.
+Assuming you have Rust and `cargo` installed, it's just a matter of two steps:
 
-1) Install `xargo`:
+1) If not already installed, install `rust-src`:
 
     ```bash
-    cargo install xargo
+    rustup component add rust-src
     ```
 
 2) Install `cargo-nx`:
