@@ -217,6 +217,7 @@ fn main() {
 
     let mut build_args: Vec<String> = vec![
         String::from("build"),
+        String::from("-Zbuild-std"),
         format!("--target={}", triple),
         String::from("--message-format=json-diagnostic-rendered-ansi")
     ];
