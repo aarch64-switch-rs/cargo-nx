@@ -66,7 +66,7 @@ fn handle_nro_format(root: &Path, artifact: &Artifact, metadata: NroMetadata) {
     .write_nro(
         &mut File::create(nro.clone()).unwrap(),
         romfs,
-        icon.as_ref().map(|icon_path| icon_path.as_str()),
+        icon.as_deref(),
         metadata.nacp,
     )
     .unwrap();
@@ -87,14 +87,14 @@ fn handle_nsp_format(root: &Path, artifact: &Artifact, metadata: NspMetadata) {
 
     let exefs_nsp = get_output_elf_path_as(artifact, "nsp");
 
-    let npdm_json = root.join(metadata.npdm.clone());
+    let npdm_json = root.join(metadata.npdm);
     let npdm = NpdmJson::from_file(&npdm_json).unwrap();
     let mut option = OpenOptions::new();
     let output_option = option.write(true).create(true).truncate(true);
     let mut out_file = output_option.open(main_npdm.clone()).map_err(|err| (err, main_npdm.clone())).unwrap();
     npdm.into_npdm(&mut out_file, ACIDBehavior::Empty).unwrap();
 
-    NxoFile::from_elf(elf.to_str().unwrap()).unwrap().write_nso(&mut File::create(main_exe.clone()).unwrap()).unwrap();
+    NxoFile::from_elf(elf.to_str().unwrap()).unwrap().write_nso(&mut File::create(main_exe).unwrap()).unwrap();
 
     let mut nsp = Pfs0::from_directory(exefs_dir.to_str().unwrap()).unwrap();
     let mut option = OpenOptions::new();
@@ -161,10 +161,7 @@ fn main() {
         });
     }
 
-    let path = match nx_matches.value_of("path") {
-        Some(path_str) => path_str,
-        None => "."
-    };
+    let path = nx_matches.value_of("path").unwrap_or(".");
 
     let metadata = MetadataCommand::new()
         .manifest_path(Path::new(path).join("Cargo.toml"))
