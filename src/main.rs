@@ -245,6 +245,10 @@ fn main() {
 
     let mut build_args: Vec<String> = vec![
         String::from("build"),
+        // TODO: consider explicitly setting which crates to compile (e.g.
+        // build-std=core,std,alloc,proc_macro,test).
+        String::from("-Z"),
+        String::from("build-std"),
         format!("--target={}", triple),
         String::from("--message-format=json-diagnostic-rendered-ansi"),
     ];
