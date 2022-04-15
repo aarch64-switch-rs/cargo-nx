@@ -7,7 +7,7 @@
     "position-independent-executables": true,
     "features": "+a57,+strict-align,+crc,+crypto",
     "pre-link-args": {
-        "ld.lld": ["-T$LD_PATH"]
+        "ld.lld": ["-T<ld_path>"]
     },
     "linker": "rust-lld",
     "linker-flavor": "ld.lld",

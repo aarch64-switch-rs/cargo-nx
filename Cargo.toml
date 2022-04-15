@@ -3,10 +3,10 @@ name = "cargo-nx"
 version = "0.1.0"
 authors = ["XorTroll"]
 license = "MIT"
-homepage = "https://github.com/aarch64-switch-rs/cargo-nx/"
+homepage = "https://github.com/aarch64-switch-rs/"
 repository = "https://github.com/aarch64-switch-rs/cargo-nx/"
 edition = "2018"
-description = "Cargo subcommand to simplify building Nintendo Switch projects"
+description = "Cargo subcommand to simplify creating and building Nintendo Switch homebrew projects"
 
 [dependencies]
 clap = "2"
