@@ -20,9 +20,10 @@ struct NroMetadata {
     nacp: Option<NacpFile>
 }
 
-const DEFAULT_TARGET_TRIPLE: &str = "aarch64-none-elf";
-const DEFAULT_TARGET_JSON: &str = include_str!("../default/specs/aarch64-none-elf.json");
-const DEFAULT_TARGET_LD: &str = include_str!("../default/specs/aarch64-none-elf.ld");
+const DEFAULT_TARGET_TRIPLE: &str = "aarch64-nintendo-switch";
+// Note: when the tier 3 target gets added (https://github.com/rust-lang/rust/pull/88991), we will no longer need to manually include/write these for building
+const DEFAULT_TARGET_JSON: &str = include_str!("../default/specs/aarch64-nintendo-switch.json");
+const DEFAULT_TARGET_LD: &str = include_str!("../default/specs/aarch64-nintendo-switch.ld");
 
 fn prepare_default_target(root: &str) -> String {
     let target_path = format!("{}/target", root);
