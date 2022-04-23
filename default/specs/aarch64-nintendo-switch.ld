@@ -6,7 +6,6 @@ PHDRS {
     text PT_LOAD FLAGS(5);
     rodata PT_LOAD FLAGS(4);
     data PT_LOAD FLAGS(6);
-    bss PT_LOAD FLAGS(6);
     dynamic PT_DYNAMIC;
 }
 
@@ -15,14 +14,13 @@ SECTIONS {
 
     /* Text sections */
 
-    . = ALIGN(0x1000);
+    . = ALIGN(8);
 
     .text : {
         PROVIDE_HIDDEN(__text_start = .);
         KEEP(*(.text.rrt0))
-
         . = 0x80;
-
+        KEEP(*(.text.mod0))
         *(.text .text.*)
         *(.plt .plt.*)
     }
@@ -32,16 +30,12 @@ SECTIONS {
     . = ALIGN(0x1000);
 
     .module_name : {
-        *(.module_name)
+        KEEP(*(.module_name))
     } :rodata
     
     .rodata : {
         *(.rodata .rodata.*)
     } :rodata
-
-    .mod0 : {
-        KEEP(*(.data.mod0))
-    }
 
     .dynsym : {
         *(.dynsym .dynsym.*)
@@ -88,7 +82,7 @@ SECTIONS {
 
     /* BSS section */
 
-    . = ALIGN(0x1000);
+    . = ALIGN(8);
 
     .bss : {
         PROVIDE_HIDDEN(__bss_start = .);
@@ -96,5 +90,5 @@ SECTIONS {
         *(COMMON)
         . = ALIGN(8);
         PROVIDE_HIDDEN(__bss_end = .);
-    } :bss
+    } :data
 }
