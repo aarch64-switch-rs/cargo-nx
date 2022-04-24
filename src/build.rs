@@ -20,20 +20,55 @@ struct NroMetadata {
     nacp: Option<NacpFile>
 }
 
-const DEFAULT_TARGET_TRIPLE: &str = "aarch64-nintendo-switch";
 // Note: when the tier 3 target gets added (https://github.com/rust-lang/rust/pull/88991), we will no longer need to manually include/write these for building
-const DEFAULT_TARGET_JSON: &str = include_str!("../default/specs/aarch64-nintendo-switch.json");
-const DEFAULT_TARGET_LD: &str = include_str!("../default/specs/aarch64-nintendo-switch.ld");
 
-fn prepare_default_target(root: &str) -> String {
+const DEFAULT_TARGET_TRIPLE_64: &str = "aarch64-nintendo-switch";
+const DEFAULT_TARGET_JSON_64: &str = include_str!("../default/specs/aarch64-nintendo-switch.json");
+const DEFAULT_TARGET_LD_64: &str = include_str!("../default/specs/aarch64-nintendo-switch.ld");
+
+const DEFAULT_TARGET_TRIPLE_32: &str = "armv7-nintendo-switch";
+const DEFAULT_TARGET_JSON_32: &str = include_str!("../default/specs/armv7-nintendo-switch.json");
+const DEFAULT_TARGET_LD_32: &str = include_str!("../default/specs/armv7-nintendo-switch.ld");
+
+#[inline]
+const fn get_default_target_triple(is_32bit: bool) -> &'static str {
+    if is_32bit {
+        DEFAULT_TARGET_TRIPLE_32
+    }
+    else {
+        DEFAULT_TARGET_TRIPLE_64
+    }
+}
+
+#[inline]
+const fn get_default_target_json(is_32bit: bool) -> &'static str {
+    if is_32bit {
+        DEFAULT_TARGET_JSON_32
+    }
+    else {
+        DEFAULT_TARGET_JSON_64
+    }
+}
+
+#[inline]
+const fn get_default_target_ld(is_32bit: bool) -> &'static str {
+    if is_32bit {
+        DEFAULT_TARGET_LD_32
+    }
+    else {
+        DEFAULT_TARGET_LD_64
+    }
+}
+
+fn prepare_default_target(root: &str, is_32bit: bool) -> String {
     let target_path = format!("{}/target", root);
     std::fs::create_dir_all(target_path.clone()).unwrap();
 
-    let json = format!("{}/{}.json", target_path, DEFAULT_TARGET_TRIPLE);
-    let ld = format!("{}/{}.ld", target_path, DEFAULT_TARGET_TRIPLE);
+    let json = format!("{}/{}.json", target_path, get_default_target_triple(is_32bit));
+    let ld = format!("{}/{}.ld", target_path, get_default_target_triple(is_32bit));
 
-    std::fs::write(json, DEFAULT_TARGET_JSON.replace("<ld_path>", ld.as_str())).unwrap();
-    std::fs::write(ld, DEFAULT_TARGET_LD.to_string()).unwrap();
+    std::fs::write(json, get_default_target_json(is_32bit).replace("<ld_path>", ld.as_str())).unwrap();
+    std::fs::write(ld, get_default_target_ld(is_32bit).to_string()).unwrap();
     
     target_path
 }
@@ -110,6 +145,8 @@ pub fn handle_build(build_cmd: &ArgMatches) {
         });
     }
 
+    let is_32bit = build_cmd.is_present("b32");
+
     let path = match build_cmd.value_of("path") {
         Some(path_str) => path_str,
         None => "."
@@ -145,7 +182,7 @@ pub fn handle_build(build_cmd: &ArgMatches) {
 
     let triple = match build_cmd.value_of("triple") {
         Some(triple_str) => triple_str,
-        None => DEFAULT_TARGET_TRIPLE
+        None => get_default_target_triple(is_32bit)
     };
     if is_verbose {
         println!("Triple: {}", triple);
@@ -157,7 +194,7 @@ pub fn handle_build(build_cmd: &ArgMatches) {
     }
 
     let build_target_path = match use_default_target {
-        true => prepare_default_target(rust_target_path.to_str().unwrap()),
+        true => prepare_default_target(rust_target_path.to_str().unwrap(), is_32bit),
         false => rust_target_path.to_str().unwrap().into(),
     };
     if is_verbose {

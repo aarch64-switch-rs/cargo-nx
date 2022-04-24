@@ -108,6 +108,12 @@ fn main() {
                     .help("Displays extra information during the build process")
                     .required(false)
                 )
+                .arg( // TODO: better way to do this?
+                    Arg::with_name("arm")
+                    .long("arm")
+                    .required(false)
+                    .help("Compiles as 32-bit default target (64-bit target is used by default)")
+                )
             )
         )
         .get_matches();
