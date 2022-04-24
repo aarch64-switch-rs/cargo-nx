@@ -145,7 +145,7 @@ pub fn handle_build(build_cmd: &ArgMatches) {
         });
     }
 
-    let is_32bit = build_cmd.is_present("b32");
+    let is_32bit = build_cmd.is_present("arm");
 
     let path = match build_cmd.value_of("path") {
         Some(path_str) => path_str,
