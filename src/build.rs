@@ -6,11 +6,12 @@ use std::io::BufReader;
 use clap::ArgMatches;
 
 use cargo_metadata::{Artifact, Message, Package, MetadataCommand};
-use linkle::format::{nacp::NacpFile, nxo::NxoFile, romfs::RomFs, pfs0::Pfs0, npdm::NpdmJson, npdm::ACIDBehavior};
+use linkle::format::{nacp::NacpFile, nxo::NxoFile, romfs::RomFs, pfs0::Pfs0, npdm::NpdmInput, npdm::AcidBehavior};
 
 #[derive(Debug, Serialize, Deserialize, Default)]
 struct NspMetadata {
-    npdm: String
+    npdm: Option<NpdmInput>,
+    npdm_json: Option<String>
 }
 
 #[derive(Debug, Serialize, Deserialize, Default)]
@@ -112,12 +113,21 @@ fn handle_nsp_format(root: &Path, artifact: &Artifact, metadata: NspMetadata) {
 
     let exefs_nsp = get_output_elf_path_as(artifact, "nsp");
 
-    let npdm_json = root.join(metadata.npdm.clone());
-    let npdm = NpdmJson::from_file(&npdm_json).unwrap();
+    let npdm = if let Some(npdm_json) = metadata.npdm_json {
+        let npdm_json_path = root.join(npdm_json.clone());
+        NpdmInput::from_json(&npdm_json_path).unwrap()
+    }
+    else if let Some(npdm) = metadata.npdm {
+        npdm
+    }
+    else {
+        panic!("No npdm specified")
+    };
+
     let mut option = OpenOptions::new();
     let output_option = option.write(true).create(true).truncate(true);
     let mut out_file = output_option.open(main_npdm.clone()).map_err(|err| (err, main_npdm.clone())).unwrap();
-    npdm.into_npdm(&mut out_file, ACIDBehavior::Empty).unwrap();
+    npdm.into_npdm(&mut out_file, AcidBehavior::Empty).unwrap();
 
     NxoFile::from_elf(elf.to_str().unwrap()).unwrap().write_nso(&mut File::create(main_exe.clone()).unwrap()).unwrap();
 
