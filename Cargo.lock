@@ -505,7 +505,7 @@ checksum = "33a33a362ce288760ec6a508b94caaec573ae7d3bbbd91b87aa0bad4456839db"
 [[package]]
 name = "linkle"
 version = "0.2.10"
-source = "git+https://github.com/XorTroll/linkle?branch=npdm#3a327920d2f8788f57f279682c473f687459ada5"
+source = "git+https://github.com/XorTroll/linkle?branch=npdm#357894f90ef50b07460f4f5b8efea8709ed5f602"
 dependencies = [
  "aes",
  "bincode",
