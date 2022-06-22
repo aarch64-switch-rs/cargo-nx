@@ -4,13 +4,12 @@ use std::path::{PathBuf, Path};
 use std::process::{Command, Stdio};
 use std::io::BufReader;
 use clap::ArgMatches;
-
 use cargo_metadata::{Artifact, Message, Package, MetadataCommand};
-use linkle::format::{nacp::NacpFile, nxo::NxoFile, romfs::RomFs, pfs0::Pfs0, npdm::NpdmInput, npdm::AcidBehavior};
+use linkle::format::{nacp::Nacp, nxo::Nxo, romfs::RomFs, pfs0::Pfs0, npdm::{Npdm, AcidBehavior}};
 
 #[derive(Debug, Serialize, Deserialize, Default)]
 struct NspMetadata {
-    npdm: Option<NpdmInput>,
+    npdm: Option<Npdm>,
     npdm_json: Option<String>
 }
 
@@ -18,7 +17,7 @@ struct NspMetadata {
 struct NroMetadata {
     romfs: Option<String>,
     icon: Option<String>,
-    nacp: Option<NacpFile>
+    nacp: Option<Nacp>
 }
 
 // Note: when the tier 3 target gets added (https://github.com/rust-lang/rust/pull/88991), we will no longer need to manually include/write these for building
@@ -87,7 +86,7 @@ fn handle_nro_format(root: &Path, artifact: &Artifact, metadata: NroMetadata) {
     let romfs = metadata.romfs.as_ref().map(|romfs_dir| RomFs::from_directory(&root.join(romfs_dir)).unwrap());
     let icon = metadata.icon.as_ref().map(|icon_file| root.join(icon_file.clone())).map(|icon_path| icon_path.to_string_lossy().into_owned());
 
-    NxoFile::from_elf(elf.to_str().unwrap())
+    Nxo::from_elf(elf.to_str().unwrap())
     .unwrap()
     .write_nro(
         &mut File::create(nro.clone()).unwrap(),
@@ -115,7 +114,7 @@ fn handle_nsp_format(root: &Path, artifact: &Artifact, metadata: NspMetadata) {
 
     let npdm = if let Some(npdm_json) = metadata.npdm_json {
         let npdm_json_path = root.join(npdm_json.clone());
-        NpdmInput::from_json(&npdm_json_path).unwrap()
+        Npdm::from_json(&npdm_json_path).unwrap()
     }
     else if let Some(npdm) = metadata.npdm {
         npdm
@@ -129,7 +128,7 @@ fn handle_nsp_format(root: &Path, artifact: &Artifact, metadata: NspMetadata) {
     let mut out_file = output_option.open(main_npdm.clone()).map_err(|err| (err, main_npdm.clone())).unwrap();
     npdm.into_npdm(&mut out_file, AcidBehavior::Empty).unwrap();
 
-    NxoFile::from_elf(elf.to_str().unwrap()).unwrap().write_nso(&mut File::create(main_exe.clone()).unwrap()).unwrap();
+    Nxo::from_elf(elf.to_str().unwrap()).unwrap().write_nso(&mut File::create(main_exe.clone()).unwrap()).unwrap();
 
     let mut nsp = Pfs0::from_directory(exefs_dir.to_str().unwrap()).unwrap();
     let mut option = OpenOptions::new();
