@@ -7,5 +7,159 @@ edition = "<edition>"
 [dependencies]
 nx = { git = "https://github.com/aarch64-switch-rs/nx" }
 
-[package.metadata.nx.nsp]
-npdm = "npdm.json"
+# For help / more information, see https://github.com/aarch64-switch-rs/cargo-nx/wiki
+
+[package.metadata.nx.nsp.npdm]
+name = "<name>"
+signature_key_generation = 0
+main_thread_stack_size = "0x20000"
+main_thread_priority = 49
+main_thread_core_number = 3
+system_resource_size = 0
+version = 0
+address_space_type = 1
+is_64_bit = true
+optimize_memory_allocation = false
+disable_device_address_space_merge = false
+is_production = true
+unqualified_approval = false
+memory_region = 2
+program_id = "<program_id>"
+
+[package.metadata.nx.nsp.npdm.fs_access_control]
+flags = "0xFFFFFFFFFFFFFFFF"
+
+[package.metadata.nx.nsp.npdm.service_access_control]
+accessed_services = [ "*" ]
+hosted_services = [ "*" ]
+
+[package.metadata.nx.nsp.npdm.kernel_capabilities]
+highest_priority = 63
+lowest_priority = 16
+max_core_number = 3
+min_core_number = 3
+enable_system_calls = [
+    "SetHeapSize",
+    "SetMemoryPermission",
+    "SetMemoryAttribute",
+    "MapMemory",
+    "UnmapMemory",
+    "QueryMemory",
+    "ExitProcess",
+    "CreateThread",
+    "StartThread",
+    "ExitThread",
+    "SleepThread",
+    "GetThreadPriority",
+    "SetThreadPriority",
+    "GetThreadCoreMask",
+    "SetThreadCoreMask",
+    "GetCurrentProcessorNumber",
+    "SignalEvent",
+    "ClearEvent",
+    "MapSharedMemory",
+    "UnmapSharedMemory",
+    "CreateTransferMemory",
+    "CloseHandle",
+    "ResetSignal",
+    "WaitSynchronization",
+    "CancelSynchronization",
+    "ArbitrateLock",
+    "ArbitrateUnlock",
+    "WaitProcessWideKeyAtomic",
+    "SignalProcessWideKey",
+    "GetSystemTick",
+    "ConnectToNamedPort",
+    "SendSyncRequestLight",
+    "SendSyncRequest",
+    "SendSyncRequestWithUserBuffer",
+    "SendAsyncRequestWithUserBuffer",
+    "GetProcessId",
+    "GetThreadId",
+    "Break",
+    "OutputDebugString",
+    "ReturnFromException",
+    "GetInfo",
+    "FlushEntireDataCache",
+    "FlushDataCache",
+    "MapPhysicalMemory",
+    "UnmapPhysicalMemory",
+    "GetDebugFutureThreadInfo",
+    "GetLastThreadInfo",
+    "GetResourceLimitLimitValue",
+    "GetResourceLimitCurrentValue",
+    "SetThreadActivity",
+    "GetThreadContext3",
+    "WaitForAddress",
+    "SignalToAddress",
+    "SynchronizePreemptionState",
+    "GetResourceLimitPeakValue",
+    "CreateIoPool",
+    "CreateIoRegion",
+    "KernelDebug",
+    "ChangeKernelTraceState",
+    "CreateSession",
+    "AcceptSession",
+    "ReplyAndReceiveLight",
+    "ReplyAndReceive",
+    "ReplyAndReceiveWithUserBuffer",
+    "CreateEvent",
+    "MapIoRegion",
+    "UnmapIoRegion",
+    "MapPhysicalMemoryUnsafe",
+    "UnmapPhysicalMemoryUnsafe",
+    "SetUnsafeLimit",
+    "CreateCodeMemory",
+    "ControlCodeMemory",
+    "SleepSystem",
+    "ReadWriteRegister",
+    "SetProcessActivity",
+    "CreateSharedMemory",
+    "MapTransferMemory",
+    "UnmapTransferMemory",
+    "CreateInterruptEvent",
+    "QueryPhysicalAddress",
+    "QueryIoMapping",
+    "CreateDeviceAddressSpace",
+    "AttachDeviceAddressSpace",
+    "DetachDeviceAddressSpace",
+    "MapDeviceAddressSpaceByForce",
+    "MapDeviceAddressSpaceAligned",
+    "MapDeviceAddressSpace",
+    "UnmapDeviceAddressSpace",
+    "InvalidateProcessDataCache",
+    "StoreProcessDataCache",
+    "FlushProcessDataCache",
+    "DebugActiveProcess",
+    "BreakDebugProcess",
+    "TerminateDebugProcess",
+    "GetDebugEvent",
+    "ContinueDebugEvent",
+    "GetProcessList",
+    "GetThreadList",
+    "GetDebugThreadContext",
+    "SetDebugThreadContext",
+    "QueryDebugProcessMemory",
+    "ReadDebugProcessMemory",
+    "WriteDebugProcessMemory",
+    "SetHardwareBreakPoint",
+    "GetDebugThreadParam",
+    "GetSystemInfo",
+    "CreatePort",
+    "ManageNamedPort",
+    "ConnectToPort",
+    "SetProcessMemoryPermission",
+    "MapProcessMemory",
+    "UnmapProcessMemory",
+    "QueryProcessMemory",
+    "MapProcessCodeMemory",
+    "UnmapProcessCodeMemory",
+    "CreateProcess",
+    "StartProcess",
+    "TerminateProcess",
+    "GetProcessInfo",
+    "CreateResourceLimit",
+    "SetResourceLimitLimitValue",
+    "CallSecureMonitor"
+]
+kernel_version = "3.0"

@@ -23,7 +23,6 @@ const DEFAULT_NRO_SRC_MAIN_RS: &str = include_str!("../default/nro/src/main.rs")
 const DEFAULT_NSP_CARGO_TOML: &str = include_str!("../default/nsp/Cargo.toml");
 const DEFAULT_NSP_CARGO_CONFIG_TOML: &str = include_str!("../default/nsp/.cargo/config.toml");
 const DEFAULT_NSP_SRC_MAIN_RS: &str = include_str!("../default/nsp/src/main.rs");
-const DEFAULT_NSP_NPDM_JSON: &str = include_str!("../default/nsp/npdm.json");
 
 #[derive(Debug)]
 enum PackageKind {
@@ -171,10 +170,6 @@ pub fn handle_new(new_cmd: &ArgMatches) {
             let src_main_rs = process_default_file(DEFAULT_NSP_SRC_MAIN_RS, &info);
             let src_main_rs_path = format!("{}/main.rs", src_path);
             fs::write(src_main_rs_path, src_main_rs).unwrap();
-
-            let npdm_json = process_default_file(DEFAULT_NSP_NPDM_JSON, &info);
-            let npdm_json_path = format!("{}/npdm.json", path);
-            fs::write(npdm_json_path, npdm_json).unwrap();
         }
     }
 

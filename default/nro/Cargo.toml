@@ -7,5 +7,10 @@ edition = "<edition>"
 [dependencies]
 nx = { git = "https://github.com/aarch64-switch-rs/nx" }
 
-[package.metadata.nx.nro]
-nacp = { name = "<name>", author = "<author>", version = "<version>" }
+# For help / more information, see https://github.com/aarch64-switch-rs/cargo-nx/wiki
+
+[package.metadata.nx.nro.nacp]
+default_name = "<name>"
+default_author = "<author>"
+version = "<version>"
+application_id = "0x0100AAAABBBBCCCC"
