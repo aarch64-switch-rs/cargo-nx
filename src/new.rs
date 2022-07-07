@@ -1,10 +1,5 @@
-use std::fmt;
-use std::path::PathBuf;
+use crate::args::{CargoNxNew, PackageKind};
 use std::fs;
-use clap::ArgMatches;
-
-pub const SUPPORTED_EDITIONS: &[u32] = &[2015, 2018, 2021];
-pub const DEFAULT_EDITION: u32 = 2021;
 
 const INITIAL_VERSION: &str = "0.1.0";
 
@@ -24,32 +19,13 @@ const DEFAULT_NSP_CARGO_TOML: &str = include_str!("../default/nsp/Cargo.toml");
 const DEFAULT_NSP_CARGO_CONFIG_TOML: &str = include_str!("../default/nsp/.cargo/config.toml");
 const DEFAULT_NSP_SRC_MAIN_RS: &str = include_str!("../default/nsp/src/main.rs");
 
-#[derive(Debug)]
-enum PackageKind {
-    Lib,
-    Nro,
-    Nsp
-}
-
-impl fmt::Display for PackageKind {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let fmt_str = match self {
-            PackageKind::Lib => "lib",
-            PackageKind::Nro => "nro",
-            PackageKind::Nsp => "nsp"
-        };
-
-        write!(f, "{}", fmt_str)
-    }
-}
-
 #[derive(Debug, Default)]
 struct PackageInfo<'a> {
     name: &'a str,
     author: &'a str,
     version: &'a str,
-    edition: u32,
-    program_id: u64
+    edition: u16,
+    program_id: u64,
 }
 
 fn process_default_file<'a>(file: &str, replace_info: &PackageInfo<'a>) -> String {
@@ -57,121 +33,78 @@ fn process_default_file<'a>(file: &str, replace_info: &PackageInfo<'a>) -> Strin
         .replace("<author>", replace_info.author)
         .replace("<version>", replace_info.version)
         .replace("<edition>", format!("{}", replace_info.edition).as_str())
-        .replace("<program_id>", format!("0x{:016X}", replace_info.program_id).as_str())
+        .replace(
+            "<program_id>",
+            format!("0x{:016X}", replace_info.program_id).as_str(),
+        )
 }
 
-pub fn handle_new(new_cmd: &ArgMatches) {
-    let path = new_cmd.value_of("path").unwrap();
-    let path_b = PathBuf::from(path);
-
-    if path_b.is_dir() {
+pub fn handle_new(args: CargoNxNew) {
+    if args.path.is_dir() {
         panic!("Specified path already exists...");
     }
 
-    let mut info: PackageInfo = Default::default();
+    let name = args.name.as_deref().unwrap_or_else(|| {
+        args.path
+            .file_name()
+            .expect("path has invalid file name")
+            .to_str()
+            .expect("path file name is not valid UTF-8")
+    });
+    let edition = args
+        .edition
+        .parse::<u16>()
+        .expect("invalid edition. how did this even happen??");
+    let version = INITIAL_VERSION;
+    let author = DEFAULT_AUTHOR;
+    let program_id = DEFAULT_PROGRAM_ID;
+    let info = PackageInfo {
+        name,
+        edition,
+        version,
+        author,
+        program_id,
+    };
 
-    info.name = new_cmd.value_of("name").unwrap_or(path_b.file_name().unwrap().to_str().unwrap());
+    fs::create_dir_all(&args.path).expect("failed to create project directory");
 
-    let mut kind = PackageKind::Nro;
-    let mut kind_arg_count = 0;
-    if new_cmd.is_present("lib") {
-        kind_arg_count += 1;
-        kind = PackageKind::Lib;
-    }
-    if new_cmd.is_present("nro") {
-        kind_arg_count += 1;
-        kind = PackageKind::Nro;
-    }
-    if new_cmd.is_present("nsp") {
-        kind_arg_count += 1;
-        kind = PackageKind::Nsp;
-    }
-    if kind_arg_count > 1 {
-        panic!("Too many package kinds specified...");
-    }
+    let cargo_toml = match args.kind {
+        PackageKind::Lib => DEFAULT_LIB_CARGO_TOML,
+        PackageKind::Nro => DEFAULT_NRO_CARGO_TOML,
+        PackageKind::Nsp => DEFAULT_NSP_CARGO_TOML,
+    };
+    let cargo_config_toml = match args.kind {
+        PackageKind::Lib => DEFAULT_LIB_CARGO_CONFIG_TOML,
+        PackageKind::Nro => DEFAULT_NRO_CARGO_CONFIG_TOML,
+        PackageKind::Nsp => DEFAULT_NSP_CARGO_CONFIG_TOML,
+    };
+    let src_main_file = match args.kind {
+        PackageKind::Lib => DEFAULT_LIB_SRC_LIB_RS,
+        PackageKind::Nro => DEFAULT_NRO_SRC_MAIN_RS,
+        PackageKind::Nsp => DEFAULT_NSP_SRC_MAIN_RS,
+    };
 
-    info.edition = DEFAULT_EDITION;
-    if let Some(edition_v) = new_cmd.value_of("edition") {
-        if let Ok(edition_val) = edition_v.parse::<u32>() {
-            if SUPPORTED_EDITIONS.contains(&edition_val) {
-                info.edition = edition_val;
-            }
-            else {
-                panic!("Unsupported edition -- supported editions: {:?}", SUPPORTED_EDITIONS);
-            }
-        }
-        else {
-            panic!("The specified edition is not a valid number...");
-        }
-    }
+    let cargo_toml = process_default_file(cargo_toml, &info);
+    fs::write(args.path.join("Cargo.toml"), cargo_toml)
+        .expect("failed to create project Cargo.toml");
 
-    info.version = INITIAL_VERSION;
+    let dot_cargo_path = args.path.join(".cargo");
+    fs::create_dir(dot_cargo_path.clone()).expect("failed to create project .cargo directory");
 
-    info.author = DEFAULT_AUTHOR;
+    let cargo_config_toml = process_default_file(cargo_config_toml, &info);
+    fs::write(dot_cargo_path.join("config.toml"), cargo_config_toml)
+        .expect("failed to write to project .cargo/config.toml");
 
-    info.program_id = DEFAULT_PROGRAM_ID;
+    let src_path = args.path.join("src");
+    fs::create_dir(&src_path).expect("failed to create project src directory");
 
-    fs::create_dir_all(path_b.clone()).unwrap();
+    let main_file_path = match args.kind {
+        PackageKind::Lib => src_path.join("lib.rs"),
+        PackageKind::Nro | PackageKind::Nsp => src_path.join("main.rs"),
+    };
 
-    match kind {
-        PackageKind::Lib => {
-            let cargo_toml = process_default_file(DEFAULT_LIB_CARGO_TOML, &info);
-            let cargo_toml_path = format!("{}/Cargo.toml", path);
-            fs::write(cargo_toml_path, cargo_toml).unwrap();
+    let src_lib_rs = process_default_file(src_main_file, &info);
+    fs::write(&main_file_path, src_lib_rs).expect("failed to create project lib/main file");
 
-            let cargo_path = format!("{}/.cargo", path);
-            fs::create_dir(cargo_path.clone()).unwrap();
-
-            let cargo_config_toml = process_default_file(DEFAULT_LIB_CARGO_CONFIG_TOML, &info);
-            let cargo_config_toml_path = format!("{}/config.toml", cargo_path);
-            fs::write(cargo_config_toml_path, cargo_config_toml).unwrap();
-            
-            let src_path = format!("{}/src", path);
-            fs::create_dir(src_path.clone()).unwrap();
-
-            let src_lib_rs = process_default_file(DEFAULT_LIB_SRC_LIB_RS, &info);
-            let src_lib_rs_path = format!("{}/lib.rs", src_path);
-            fs::write(src_lib_rs_path, src_lib_rs).unwrap();
-        },
-        PackageKind::Nro => {
-            let cargo_toml = process_default_file(DEFAULT_NRO_CARGO_TOML, &info);
-            let cargo_toml_path = format!("{}/Cargo.toml", path);
-            fs::write(cargo_toml_path, cargo_toml).unwrap();
-
-            let cargo_path = format!("{}/.cargo", path);
-            fs::create_dir(cargo_path.clone()).unwrap();
-
-            let cargo_config_toml = process_default_file(DEFAULT_NRO_CARGO_CONFIG_TOML, &info);
-            let cargo_config_toml_path = format!("{}/config.toml", cargo_path);
-            fs::write(cargo_config_toml_path, cargo_config_toml).unwrap();
-            
-            let src_path = format!("{}/src", path);
-            fs::create_dir(src_path.clone()).unwrap();
-
-            let src_main_rs = process_default_file(DEFAULT_NRO_SRC_MAIN_RS, &info);
-            let src_main_rs_path = format!("{}/main.rs", src_path);
-            fs::write(src_main_rs_path, src_main_rs).unwrap();
-        },
-        PackageKind::Nsp => {
-            let cargo_toml = process_default_file(DEFAULT_NSP_CARGO_TOML, &info);
-            let cargo_toml_path = format!("{}/Cargo.toml", path);
-            fs::write(cargo_toml_path, cargo_toml).unwrap();
-
-            let cargo_path = format!("{}/.cargo", path);
-            fs::create_dir(cargo_path.clone()).unwrap();
-
-            let cargo_config_toml = process_default_file(DEFAULT_NSP_CARGO_CONFIG_TOML, &info);
-            let cargo_config_toml_path = format!("{}/config.toml", cargo_path);
-            fs::write(cargo_config_toml_path, cargo_config_toml).unwrap();
-            
-            let src_path = format!("{}/src", path);
-            fs::create_dir(src_path.clone()).unwrap();
-
-            let src_main_rs = process_default_file(DEFAULT_NSP_SRC_MAIN_RS, &info);
-            let src_main_rs_path = format!("{}/main.rs", src_path);
-            fs::write(src_main_rs_path, src_main_rs).unwrap();
-        }
-    }
-
-    println!("Created `{}` package ({})", info.name, kind);
+    println!("Created `{}` package ({})", info.name, args.kind);
 }

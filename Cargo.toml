@@ -5,11 +5,11 @@ authors = ["XorTroll"]
 license = "MIT"
 homepage = "https://github.com/aarch64-switch-rs/"
 repository = "https://github.com/aarch64-switch-rs/cargo-nx/"
-edition = "2018"
+edition = "2021"
 description = "Cargo subcommand to simplify creating and building Nintendo Switch homebrew projects"
 
 [dependencies]
-clap = "2"
+clap = { version = "3", features = ["derive"] }
 serde = "1"
 serde_derive = "1"
 serde_json = "1"
