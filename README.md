@@ -36,7 +36,7 @@ Available parameters/flags
 
 - `--edition`: Specify the package edition (available editions: [2015, 2018, 2021], default is 2021)
 
-- `--lib`, `--nro`, `--nsp`: Via one of these one can specify the package kind to create (default is NRO)
+- `--type <package type>`: Specify the package type to create. `lib`, `nro`, and `nsp` are available, with `nro` being the default.
 
 ### `build` subcommand
 
@@ -50,9 +50,9 @@ Available parameters/flags:
 
 - `-p <path>`, `--path=<path>`: Specifies a path with a crate to build (containing `Cargo.toml`, etc.), since the current directory is used by default otherwise.
 
-- `-tp <triple>`, `--triple=<triple>`: Specifies the target triple, which is "aarch64-none-elf" by default.
+- `-t <triple>`, `--triple=<triple>`: Specifies the target triple, which is "aarch64-none-elf" by default.
 
-- `-ctg`, `--use-custom-target`: Notifies the program to not use the default target JSON/linker script, which can be used to use custom ones.
+- `-c`, `--use-custom-target`: Notifies the program to not use the default target JSON/linker script, which can be used to use custom ones.
 
 - `-v`, `--verbose`: Displays extra information during the build process.
 
@@ -87,32 +87,32 @@ nacp = { name = "Sample project", author = "XorTroll", version = "0.1 beta" }
 
 The fields present on the `nacp` object, all of them optional, are the following:
 
-| Field             | Description                                       | Default value              |
-|:----------------- |:-------------------------------------------------:| --------------------------:|
-| name              | The application name                              | Unknown Application        |
-| author            | The application author                            | Unknown Author             |
-| version           | The application version                           | 1.0.0                      |
-| title_id          | The application ID                                | 0000000000000000           |
-| dlc_base_title_id | The base ID of all the application's DLC          | title_id + 0x1000          |
+| Field             |                    Description                    |              Default value |
+| :---------------- | :-----------------------------------------------: | -------------------------: |
+| name              |               The application name                |        Unknown Application |
+| author            |              The application author               |             Unknown Author |
+| version           |              The application version              |                      1.0.0 |
+| title_id          |                The application ID                 |           0000000000000000 |
+| dlc_base_title_id |     The base ID of all the application's DLC      |          title_id + 0x1000 |
 | lang (object)     | Different names/authors depending of the language | values above for all langs |
 
-| Language codes      | Corresponding names    |
-|:-------------------:|:----------------------:|
-| en-US               | American English       |
-| en-GB               | British English        |
-| ja                  | Japanese               |
-| fr                  | French                 |
-| de                  | German                 |
-| es-419              | Latin-American Spanish |
-| es                  | Spanish                |
-| it                  | Italian                |
-| nl                  | Dutch                  |
-| fr-CA               | Canadian French        |
-| pt                  | Portuguese             |
-| ru                  | Russian                |
-| ko                  | Korean                 |
-| zh-TW               | Chinese (Traditional)  |
-| zh-CN               | Chinese (Simplified)   |
+| Language codes |  Corresponding names   |
+| :------------: | :--------------------: |
+|     en-US      |    American English    |
+|     en-GB      |    British English     |
+|       ja       |        Japanese        |
+|       fr       |         French         |
+|       de       |         German         |
+|     es-419     | Latin-American Spanish |
+|       es       |        Spanish         |
+|       it       |        Italian         |
+|       nl       |         Dutch          |
+|     fr-CA      |    Canadian French     |
+|       pt       |       Portuguese       |
+|       ru       |        Russian         |
+|       ko       |         Korean         |
+|     zh-TW      | Chinese (Traditional)  |
+|     zh-CN      |  Chinese (Simplified)  |
 
 - Example with specific languages:
 
