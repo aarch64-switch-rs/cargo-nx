@@ -34,7 +34,7 @@ Available parameters/flags
 
 - `--name`: Specify the package name (default is the input path's directory name)
 
-- `--edition`: Specify the package edition (available editions: [2015, 2018, 2021], default is 2021)
+- `--edition`: Specify the package edition (available editions: [2015, 2021, 2021], default is 2021)
 
 - `--type <package type>`: Specify the package type to create. `lib`, `nro`, and `nsp` are available, with `nro` being the default.
 
@@ -75,44 +75,63 @@ Projects which generate homebrew NRO binaries don't have any mandatory fields, b
 name = "Project"
 version = "0.1.0"
 authors = ["XorTroll"]
-edition = "2018"
+edition = "2021"
 
 [package.metadata.nx.nro]
 romfs = "romfs_dir"
 icon = "icon.jpg"
-nacp = { name = "Sample project", author = "XorTroll", version = "0.1 beta" }
+nacp = { default_name = "Sample project", default_author = "XorTroll", version = "0.1 beta" }
 ```
 
 > Note: the `romfs` and `icon` fields must point to items located relative to the project's directory
 
 The fields present on the `nacp` object, all of them optional, are the following:
 
-| Field             |                    Description                    |              Default value |
-| :---------------- | :-----------------------------------------------: | -------------------------: |
-| name              |               The application name                |        Unknown Application |
-| author            |              The application author               |             Unknown Author |
-| version           |              The application version              |                      1.0.0 |
-| title_id          |                The application ID                 |           0000000000000000 |
-| dlc_base_title_id |     The base ID of all the application's DLC      |          title_id + 0x1000 |
-| lang (object)     | Different names/authors depending of the language | values above for all langs |
+| Field                  | Value                                                            | Description                                               | Default value           |
+|------------------------|------------------------------------------------------------------|-----------------------------------------------------------|-------------------------|
+| default_name           | String (max size 0x200)                                          | Default title name                                        | Unknown application     |
+| default_author         | String (max size 0x100)                                          | Default application author                                | Unknown author          |
+| version                | String (max size 0x10)                                           | Application version                                       | <required field>        |
+| application_id         | Hex-String u64                                                   | Application ID                                            | 0000000000000000        |
+| add_on_content_base_id | Hex-String u64                                                   | Base ID for add-on content (DLC)                          | application_id + 0x1000 |
+| titles                 | Object of language titles                                        | Language-specific application name/author values          | Default values above    |
+| presence_group_id      | Hex-String u64                                                   | Presence group ID                                         | application_id          |
+| save_data_owner_id     | Hex-String u64                                                   | Save-data owner ID                                        | application_id          |
+| isbn                   | String (max size 0x25)                                           | ISBN                                                      | Empty string            |
+| startup_user_account   | "None", "Required", "RequiredWithNetworkServiceAccountAvailable" | Whether the application requires a user account on launch | "None"                  |
+| attribute              | "None", "Demo", "RetailInteractiveDisplay"                       | Application attribute                                     | "None"                  |
+| screenshot             | "Allow", "Deny"                                                  | Screenshot control                                        | "Allow"                 |
+| video_capture          | "Disabled", "Enabled", "Automatic"                               | Video capture control                                     | "Disabled"              |
+| logo_type              | "LicensedByNintendo", "Nintendo"                                 | Logo type                                                 | "LicensedByNintendo"    |
+| logo_handling          | "Auto", "Manual"                                                 | Logo handling                                             | "Auto"                  |
+| crash_report           | "Deny", "Allow"                                                  | Crash report control                                      | "Allow"                 |
+| bcat_passphrase        | String (max size 0x41)                                           | BCAT passphrase                                           | Empty string            |
+| program_index          | u8                                                               | Program index                                             | 0                       |
 
-| Language codes |  Corresponding names   |
-| :------------: | :--------------------: |
-|     en-US      |    American English    |
-|     en-GB      |    British English     |
-|       ja       |        Japanese        |
-|       fr       |         French         |
-|       de       |         German         |
-|     es-419     | Latin-American Spanish |
-|       es       |        Spanish         |
-|       it       |        Italian         |
-|       nl       |         Dutch          |
-|     fr-CA      |    Canadian French     |
-|       pt       |       Portuguese       |
-|       ru       |        Russian         |
-|       ko       |         Korean         |
-|     zh-TW      | Chinese (Traditional)  |
-|     zh-CN      |  Chinese (Simplified)  |
+> Note: default name/author and application ID are not actual NACP fields, but they are used as the default value for various fields, as the table shows.
+
+### Available languages
+
+| Language names       | Language codes |
+|----------------------|----------------|
+| AmericanEnglish      | en-US          |
+| BritishEnglish       | en-UK          |
+| Japanese             | ja             |
+| French               | fr             |
+| German               | de             |
+| LatinAmericanSpanish | es-419         |
+| Spanish              | es             |
+| Italian              | it             |
+| Dutch                | nl             |
+| CanadianFrench       | fr-CA          |
+| Portuguese           | pt             |
+| Russian              | ru             |
+| Korean               | ko             |
+| TraditionalChinese   | zh-TW          |
+| SimplifiedChinese    | zh-CN          |
+| BrazilianPortuguese  | pt-BR          |
+
+> Note: languages in the titles object can be specified by their names or their codes, as the JSON example above shows.
 
 - Example with specific languages:
 
@@ -121,17 +140,20 @@ The fields present on the `nacp` object, all of them optional, are the following
 name = "Multi-language"
 version = "0.2.0"
 authors = ["XorTroll"]
-edition = "2018"
+edition = "2021"
 
-[package.metadata.nx.nro]
-nacp = { name = "A", author = "B", version = "0.2 beta", lang = { ja = { name = "J" }, es = { author = "X" }, it = { name = "I", author = "T" } } }
+[package.metadata.nx.nro.nacp]
+default_name = "A"
+default_author = "B"
+version = "0.2 beta"
+titles = { ja = { name = "J" }, LatinAmericanSpanish = { author = "X" }, it = { name = "I", author = "T" } }
 ```
 
 ```bash
 Names/authors produced above:
 
 - Japanese: "J", "B"
-- Spanish: "A", "X"
+- LatinAmericanSpanish: "A", "X"
 - Italian: "I", "T"
 - Other languages: "A", "B"
 ```
@@ -140,7 +162,7 @@ Names/authors produced above:
 
 ### NSP
 
-Projects which generate sysmodule NSP exefs packages need a single, mandatory field for the NPDM data:
+Projects which generate sysmodule NSP exefs packages need a single, mandatory field for the NPDM data, which would be `npdm` for specifying it on the TOML itself or `npdm_json` for using an external JSON file:
 
 - Example:
 
@@ -149,10 +171,54 @@ Projects which generate sysmodule NSP exefs packages need a single, mandatory fi
 name = "Project"
 version = "0.2.10"
 authors = ["XorTroll"]
-edition = "2018"
+edition = "2021"
+
+[package.metadata.nx.nsp.npdm]
+name = "ProjectNpdm"
+signature_key_generation = 0
+main_thread_stack_size = "0x20000"
+main_thread_priority = 49
+main_thread_core_number = 3
+system_resource_size = 0
+version = 0
+address_space_type = 1
+is_64_bit = true
+optimize_memory_allocation = false
+disable_device_address_space_merge = false
+is_production = true
+unqualified_approval = false
+memory_region = 2
+program_id = "0x0100AAAABBBBCCCC"
+
+[package.metadata.nx.nsp.npdm.fs_access_control]
+flags = "0xFFFFFFFFFFFFFFFF"
+
+[package.metadata.nx.nsp.npdm.service_access_control]
+accessed_services = [ "fsp-srv", "ncm" ]
+hosted_services = [ "demo:srv" ]
+
+[package.metadata.nx.nsp.npdm.kernel_capabilities]
+highest_priority = 63
+lowest_priority = 16
+max_core_number = 3
+min_core_number = 3
+enable_system_calls = [
+    "SetHeapSize"
+]
+kernel_version = "3.0"
+```
+
+- Example using an external NPDM JSON:
+
+```toml
+[package]
+name = "Project"
+version = "0.2.10"
+authors = ["XorTroll"]
+edition = "2021"
 
 [package.metadata.nx.nsp]
-npdm = "npdm.json"
+npdm_json = "npdm.json"
 ```
 
 > Note: the NPDM JSON file follows the same format used in most other homebrews (check projects like [Atmosphere](https://github.com/Atmosphere-NX/Atmosphere/blob/master/stratosphere/sm/sm.json), [emuiibo](https://github.com/XorTroll/emuiibo/blob/master/emuiibo/npdm.json), [ldn_mitm](https://github.com/spacemeowx2/ldn_mitm/blob/master/ldn_mitm/res/app.json)...) and, like with the paths in the NRO format, it must be relative to the project's directory
