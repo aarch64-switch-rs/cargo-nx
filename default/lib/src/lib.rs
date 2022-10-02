@@ -8,5 +8,5 @@ extern crate nx;
 use nx::diag::log;
 
 pub fn hello() {
-    diag_log!(log::LmLogger { log::LogSeverity::Trace, false } => "Hello world!");
+    diag_log!(log::lm::LmLogger { log::LogSeverity::Trace, false } => "Hello world!");
 }

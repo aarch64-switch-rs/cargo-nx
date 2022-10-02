@@ -28,7 +28,7 @@ pub fn initialize_heap(hbl_heap: util::PointerAndSize) -> util::PointerAndSize {
 
 #[no_mangle]
 pub fn main() -> Result<()> {
-    diag_log!(log::LmLogger { log::LogSeverity::Trace, false } => "Hello world!");
+    diag_log!(log::lm::LmLogger { log::LogSeverity::Trace, false } => "Hello world!");
 
     loop {
         // Sleep 10ms (aka 10'000'000 ns)
@@ -38,5 +38,5 @@ pub fn main() -> Result<()> {
 
 #[panic_handler]
 fn panic_handler(info: &panic::PanicInfo) -> ! {
-    util::simple_panic_handler::<log::LmLogger>(info, abort::AbortLevel::FatalThrow())
+    util::simple_panic_handler::<log::lm::LmLogger>(info, abort::AbortLevel::FatalThrow())
 }

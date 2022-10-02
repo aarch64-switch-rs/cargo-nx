@@ -5,4 +5,6 @@ version = "<version>"
 edition = "<edition>"
 
 [dependencies]
-nx = { git = "https://github.com/aarch64-switch-rs/nx" }
+nx = { git = "https://github.com/aarch64-switch-rs/nx", features=["services"] }
+
+# For help / more information, see https://github.com/aarch64-switch-rs/cargo-nx/wiki
