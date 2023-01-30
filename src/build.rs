@@ -26,11 +26,7 @@ struct NroMetadata {
     nacp: Option<Nacp>,
 }
 
-// Note: when the tier 3 target gets added (https://github.com/rust-lang/rust/pull/88991), we will no longer need to manually include/write these for building
-
-const DEFAULT_TARGET_TRIPLE_64: &str = "aarch64-nintendo-switch";
-const DEFAULT_TARGET_JSON_64: &str = include_str!("../default/specs/aarch64-nintendo-switch.json");
-const DEFAULT_TARGET_LD_64: &str = include_str!("../default/specs/aarch64-nintendo-switch.ld");
+const DEFAULT_TARGET_TRIPLE_64: &str = "aarch64-nintendo-switch-freestanding";
 
 const DEFAULT_TARGET_TRIPLE_32: &str = "armv7-nintendo-switch";
 const DEFAULT_TARGET_JSON_32: &str = include_str!("../default/specs/armv7-nintendo-switch.json");
@@ -45,41 +41,25 @@ const fn get_default_target_triple(is_32bit: bool) -> &'static str {
     }
 }
 
-#[inline]
-const fn get_default_target_json(is_32bit: bool) -> &'static str {
-    if is_32bit {
-        DEFAULT_TARGET_JSON_32
-    } else {
-        DEFAULT_TARGET_JSON_64
-    }
-}
-
-#[inline]
-const fn get_default_target_ld(is_32bit: bool) -> &'static str {
-    if is_32bit {
-        DEFAULT_TARGET_LD_32
-    } else {
-        DEFAULT_TARGET_LD_64
-    }
-}
-
-fn prepare_default_target(root: &str, is_32bit: bool) -> String {
+fn prepare_default_target_32(root: &str) -> String {
     let target_path = format!("{}/target", root);
     std::fs::create_dir_all(target_path.clone()).unwrap();
+
+    let default_target_triple = DEFAULT_TARGET_TRIPLE_32;
 
     let json = format!(
         "{}/{}.json",
         target_path,
-        get_default_target_triple(is_32bit)
+        default_target_triple
     );
-    let ld = format!("{}/{}.ld", target_path, get_default_target_triple(is_32bit));
+    let ld = format!("{}/{}.ld", target_path, default_target_triple);
 
     std::fs::write(
         json,
-        get_default_target_json(is_32bit).replace("<ld_path>", ld.as_str()),
+        DEFAULT_TARGET_JSON_32.replace("<ld_path>", ld.as_str()),
     )
     .unwrap();
-    std::fs::write(ld, get_default_target_ld(is_32bit)).unwrap();
+    std::fs::write(ld, DEFAULT_TARGET_LD_32).unwrap();
 
     target_path
 }
@@ -204,7 +184,7 @@ pub fn handle_build(args: CargoNxBuild) {
     }
 
     let build_target_path = match args.use_custom_target {
-        false => prepare_default_target(rust_target_path.to_str().unwrap(), args.arm),
+        false => if args.arm { prepare_default_target_32(rust_target_path.to_str().unwrap()) } else { rust_target_path.to_str().unwrap().into() },
         true => rust_target_path.to_str().unwrap().into(),
     };
     if args.verbose {
