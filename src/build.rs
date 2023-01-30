@@ -45,10 +45,8 @@ fn prepare_default_target_32(root: &str) -> String {
     let target_path = format!("{}/target", root);
     std::fs::create_dir_all(target_path.clone()).unwrap();
 
-    let default_target_triple = DEFAULT_TARGET_TRIPLE_32;
-
-    let json = format!("{}/{}.json", target_path, default_target_triple);
-    let ld = format!("{}/{}.ld", target_path, default_target_triple);
+    let json = format!("{}/{}.json", target_path, DEFAULT_TARGET_TRIPLE_32);
+    let ld = format!("{}/{}.ld", target_path, DEFAULT_TARGET_TRIPLE_32);
 
     std::fs::write(
         json,
