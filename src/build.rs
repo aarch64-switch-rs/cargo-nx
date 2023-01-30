@@ -47,11 +47,7 @@ fn prepare_default_target_32(root: &str) -> String {
 
     let default_target_triple = DEFAULT_TARGET_TRIPLE_32;
 
-    let json = format!(
-        "{}/{}.json",
-        target_path,
-        default_target_triple
-    );
+    let json = format!("{}/{}.json", target_path, default_target_triple);
     let ld = format!("{}/{}.ld", target_path, default_target_triple);
 
     std::fs::write(
@@ -184,7 +180,13 @@ pub fn handle_build(args: CargoNxBuild) {
     }
 
     let build_target_path = match args.use_custom_target {
-        false => if args.arm { prepare_default_target_32(rust_target_path.to_str().unwrap()) } else { rust_target_path.to_str().unwrap().into() },
+        false => {
+            if args.arm {
+                prepare_default_target_32(rust_target_path.to_str().unwrap())
+            } else {
+                rust_target_path.to_str().unwrap().into()
+            }
+        }
         true => rust_target_path.to_str().unwrap().into(),
     };
     if args.verbose {
