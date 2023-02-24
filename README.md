@@ -34,7 +34,7 @@ Available parameters/flags
 
 - `--name`: Specify the package name (default is the input path's directory name)
 
-- `--edition`: Specify the package edition (available editions: [2015, 2021, 2021], default is 2021)
+- `--edition`: Specify the package edition (available editions: [2015, 2018, 2021], default is 2021)
 
 - `--type <package type>`: Specify the package type to create. `lib`, `nro`, and `nsp` are available, with `nro` being the default.
 
