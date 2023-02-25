@@ -26,63 +26,7 @@ struct NroMetadata {
     nacp: Option<Nacp>,
 }
 
-// Note: when the tier 3 target gets added (https://github.com/rust-lang/rust/pull/88991), we will no longer need to manually include/write these for building
-
-const DEFAULT_TARGET_TRIPLE_64: &str = "aarch64-nintendo-switch";
-const DEFAULT_TARGET_JSON_64: &str = include_str!("../default/specs/aarch64-nintendo-switch.json");
-const DEFAULT_TARGET_LD_64: &str = include_str!("../default/specs/aarch64-nintendo-switch.ld");
-
-const DEFAULT_TARGET_TRIPLE_32: &str = "armv7-nintendo-switch";
-const DEFAULT_TARGET_JSON_32: &str = include_str!("../default/specs/armv7-nintendo-switch.json");
-const DEFAULT_TARGET_LD_32: &str = include_str!("../default/specs/armv7-nintendo-switch.ld");
-
-#[inline]
-const fn get_default_target_triple(is_32bit: bool) -> &'static str {
-    if is_32bit {
-        DEFAULT_TARGET_TRIPLE_32
-    } else {
-        DEFAULT_TARGET_TRIPLE_64
-    }
-}
-
-#[inline]
-const fn get_default_target_json(is_32bit: bool) -> &'static str {
-    if is_32bit {
-        DEFAULT_TARGET_JSON_32
-    } else {
-        DEFAULT_TARGET_JSON_64
-    }
-}
-
-#[inline]
-const fn get_default_target_ld(is_32bit: bool) -> &'static str {
-    if is_32bit {
-        DEFAULT_TARGET_LD_32
-    } else {
-        DEFAULT_TARGET_LD_64
-    }
-}
-
-fn prepare_default_target(root: &str, is_32bit: bool) -> String {
-    let target_path = format!("{}/target", root);
-    std::fs::create_dir_all(target_path.clone()).unwrap();
-
-    let json = format!(
-        "{}/{}.json",
-        target_path,
-        get_default_target_triple(is_32bit)
-    );
-    let ld = format!("{}/{}.ld", target_path, get_default_target_triple(is_32bit));
-
-    std::fs::write(
-        json,
-        get_default_target_json(is_32bit).replace("<ld_path>", ld.as_str()),
-    )
-    .unwrap();
-    std::fs::write(ld, get_default_target_ld(is_32bit)).unwrap();
-
-    target_path
-}
+const DEFAULT_TARGET_TRIPLE: &str = "aarch64-nintendo-switch-freestanding";
 
 fn get_output_elf_path_as(artifact: &Artifact, extension: &str) -> PathBuf {
     let mut elf = artifact.filenames[0].clone();
@@ -196,17 +140,14 @@ pub fn handle_build(args: CargoNxBuild) {
     let triple = args
         .triple
         .as_deref()
-        .unwrap_or_else(|| get_default_target_triple(args.arm));
+        .unwrap_or(DEFAULT_TARGET_TRIPLE);
     println!("Triple: {}", triple);
 
     if args.verbose {
         println!("Use custom target: {}", args.use_custom_target);
     }
 
-    let build_target_path = match args.use_custom_target {
-        false => prepare_default_target(rust_target_path.to_str().unwrap(), args.arm),
-        true => rust_target_path.to_str().unwrap().into(),
-    };
+    let build_target_path = rust_target_path.to_str().unwrap();
     if args.verbose {
         println!("Build target path: {}", build_target_path);
     }
