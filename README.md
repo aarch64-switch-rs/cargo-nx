@@ -50,9 +50,7 @@ Available parameters/flags:
 
 - `-p <path>`, `--path=<path>`: Specifies a path with a crate to build (containing `Cargo.toml`, etc.), since the current directory is used by default otherwise.
 
-- `-t <triple>`, `--triple=<triple>`: Specifies the target triple, which is "aarch64-none-elf" by default.
-
-- `-c`, `--use-custom-target`: Notifies the program to not use the default target JSON/linker script, which can be used to use custom ones.
+- `-t <triple>`, `--target=<triple>`: Specifies the target triple (which can be a target JSON like with regular `cargo build`); "aarch64-nintendo-switch-freestanding" ([official tier 3 target](https://github.com/rust-lang/rust/pull/88991)) is used by default.
 
 - `-v`, `--verbose`: Displays extra information during the build process.
 
@@ -226,6 +224,12 @@ npdm_json = "npdm.json"
 ### Libraries
 
 Library projects have nothing special in their Cargo.toml
+
+## TODO
+
+- Implement more useful commands from regular `cargo build/new`, etc.
+
+- Maybe bundle some basic target JSON+LDs different from the official tier 3 one? (32-bit or w/ crypto support, for instance)
 
 ## Credits
 
