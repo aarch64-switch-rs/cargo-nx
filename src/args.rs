@@ -56,16 +56,10 @@ pub struct CargoNxBuild {
     pub path: PathBuf,
     /// The custom target triple to use, if any.
     #[clap(short, long)]
-    pub triple: Option<String>,
-    /// Avoids using the default target files.
-    #[clap(short = 'c', long)]
-    pub use_custom_target: bool,
+    pub target: Option<String>,
     /// Displays extra information during the build process.
     #[clap(short, long)]
     pub verbose: bool,
-    /// Compiles as 32-bit default target, rather than the default 64-bit target.
-    #[clap(long)]
-    pub arm: bool,
 }
 
 #[derive(Debug, Copy, Clone, ValueEnum)]

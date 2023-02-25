@@ -137,14 +137,12 @@ pub fn handle_build(args: CargoNxBuild) {
         Err(_) => metadata.workspace_root.clone(),
     };
 
-    let triple = args
-        .triple
+    let target = args
+        .target
         .as_deref()
         .unwrap_or(DEFAULT_TARGET_TRIPLE);
-    println!("Triple: {}", triple);
-
     if args.verbose {
-        println!("Use custom target: {}", args.use_custom_target);
+        println!("Target triple: {}", target);
     }
 
     let build_target_path = rust_target_path.to_str().unwrap();
@@ -154,7 +152,7 @@ pub fn handle_build(args: CargoNxBuild) {
 
     let mut build_args: Vec<String> = vec![
         String::from("build"),
-        format!("--target={}", triple),
+        format!("--target={}", target),
         String::from("--message-format=json-diagnostic-rendered-ansi"),
     ];
     if args.release {
