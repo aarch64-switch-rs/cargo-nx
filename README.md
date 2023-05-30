@@ -235,3 +235,4 @@ Library projects have nothing special in their Cargo.toml
 
 - [linkle](https://github.com/MegatonHammer/linkle) libraries as the core element of this project
 - [cargo-count](https://github.com/kbknapp/cargo-count) as the example followed to make a cargo subcommand project
+- [Icons8](https://icons8.com/) for using one of their Nintendo Switch icons as the base for the default NRO icon

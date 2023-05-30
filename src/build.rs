@@ -8,10 +8,13 @@ use linkle::format::{
     romfs::RomFs,
 };
 use std::env;
+use std::fs;
 use std::fs::{File, OpenOptions};
 use std::io::BufReader;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
+
+const DEFAULT_NRO_ICON: &'static [u8] = include_bytes!("../default/nro/default_icon.jpg");
 
 #[derive(Debug, Serialize, Deserialize, Default)]
 struct NspMetadata {
@@ -42,11 +45,21 @@ fn handle_nro_format(root: &Path, artifact: &Artifact, metadata: NroMetadata) {
         .romfs
         .as_ref()
         .map(|romfs_dir| RomFs::from_directory(&root.join(romfs_dir)).unwrap());
-    let icon = metadata
+    let provided_icon = metadata
         .icon
         .as_ref()
         .map(|icon_file| root.join(icon_file.clone()))
         .map(|icon_path| icon_path.to_string_lossy().into_owned());
+
+    let icon: Option<String> = match provided_icon {
+        Some(icon) => Some(icon),
+        _ => {
+            let temp_icon = get_output_elf_path_as(artifact, "jpg");
+            fs::write(temp_icon.clone(), DEFAULT_NRO_ICON).expect("Failed to save temporary default icon file");
+
+            Some(temp_icon.to_string_lossy().into_owned())
+        }
+    };
 
     Nxo::from_elf(elf.to_str().unwrap())
         .unwrap()
