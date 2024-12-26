@@ -1,0 +1,10 @@
+[package]
+name = "netloader"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+flate2 = "1.0"
+thiserror.workspace = true
+tokio = { version = "1.42", default-features = false, features = ["io-std", "io-util", "macros", "net", "time"] }
+tracing = "0.1"

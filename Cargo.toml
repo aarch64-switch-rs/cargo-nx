@@ -1,3 +1,13 @@
+[workspace]
+resolver = "2"
+members = [
+    "tools/netloader",
+]
+
+[workspace.dependencies]
+thiserror = "2.0"
+
+
 [package]
 name = "cargo-nx"
 version = "0.2.0"
@@ -9,14 +19,18 @@ edition = "2021"
 description = "Cargo subcommand to simplify creating and building Nintendo Switch homebrew projects"
 
 [dependencies]
-rand = "0.8.5"
+cargo_metadata = { version = "0.12.0" }
 chrono = "0.4"
-thiserror = "1.0"
-num-bigint = "0.4"
 cipher = "0.4"
 clap = { version = "3", features = ["derive"] }
+linkle = { git = "https://github.com/XorTroll/linkle", branch = "npdm" }
+netloader = { version = "0.1.0", path = "tools/netloader" }
+num-bigint = "0.4"
+rand = "0.8.5"
 serde = "1"
 serde_derive = "1"
 serde_json = "1"
-cargo_metadata = { version = "0.12.0" }
-linkle = { git = "https://github.com/XorTroll/linkle", branch = "npdm" }
+thiserror.workspace = true
+tokio = { version = "1.42.0", default-features = false, features = ["macros", "rt", "signal", "time"] }
+tracing = { version = "0.1.41", default-features = false }
+tracing-subscriber = { version = "0.3.19", features = ["env-filter"] }

@@ -1,5 +1,6 @@
+use std::{fmt, net::IpAddr, path::PathBuf};
+
 use clap::{builder::PossibleValuesParser, Args, Parser, Subcommand};
-use std::{fmt, path::PathBuf};
 
 /// The supported Rust editions
 pub static SUPPORTED_EDITIONS: &[&str] = &["2015", "2018", "2021"];
@@ -25,6 +26,7 @@ pub struct CargoNxArgs {
 pub enum CargoNxSubcommand {
     New(CargoNxNew),
     Build(CargoNxBuild),
+    Link(CargoNxLink),
 }
 
 #[derive(Args)]
@@ -60,6 +62,32 @@ pub struct CargoNxBuild {
     /// Displays extra information during the build process.
     #[clap(short, long)]
     pub verbose: bool,
+}
+
+#[derive(Args)]
+#[clap(about = "Send a file to the Nintendo Switch")]
+pub struct CargoNxLink {
+    /// The IP address of the netloader server.
+    #[clap(short, long, value_parser)]
+    pub address: Option<IpAddr>,
+    /// The number of times to retry server discovery.
+    #[clap(short, long, default_value_t = 10)]
+    pub retries: u32,
+    /// Set upload path for the file.
+    #[clap(short, long, value_parser)]
+    pub path: Option<PathBuf>,
+    /// Extra arguments to pass to the NRO file.
+    #[clap(long = "args", value_name = "ARGS")]
+    pub extra_args: Option<String>,
+    /// Start the nxLink stdio server after a successful file transfer.
+    #[clap(short, long, action)]
+    pub server: bool,
+    /// NRO file to send to the netloader server.
+    #[clap(value_name = "FILE", value_parser)]
+    pub nro_file: PathBuf,
+    /// Args to send to NRO
+    #[clap(value_name = "ARGS", value_parser)]
+    pub nro_args: Vec<String>,
 }
 
 #[derive(Debug, Copy, Clone, ValueEnum)]
