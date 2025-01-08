@@ -6,16 +6,44 @@
 //!
 //! See: https://github.com/switchbrew/switch-tools/blob/22756068dd0ed6ff9734c59cb4f99ebd3f62555b/src/nxlink.c
 
-use std::{net::Ipv4Addr, time::Duration};
+use std::{
+    net::{IpAddr, Ipv4Addr},
+    path::PathBuf,
+    time::Duration,
+};
 
 use netloader::loader::send::send_nro_file;
-use tracing_subscriber::EnvFilter;
 
-use crate::args::CargoNxLink;
+/// The `link` subcommand CLI arguments.
+#[derive(clap::Args)]
+pub struct Args {
+    /// The IP address of the netloader server.
+    #[arg(short, long, value_parser)]
+    pub address: Option<IpAddr>,
+    /// The number of times to retry server discovery.
+    #[arg(short, long, default_value_t = 10)]
+    pub retries: u32,
+    /// Set upload path for the file.
+    #[arg(short, long, value_parser)]
+    pub path: Option<PathBuf>,
+    /// Extra arguments to pass to the NRO file.
+    #[arg(long = "args", value_name = "ARGS")]
+    pub extra_args: Option<String>,
+    /// Start the nxLink stdio server after a successful file transfer.
+    #[arg(short, long, action)]
+    pub server: bool,
+    /// NRO file to send to the netloader server.
+    #[arg(value_name = "FILE", value_parser)]
+    pub nro_file: PathBuf,
+    /// Args to send to NRO
+    #[arg(value_name = "ARGS", value_parser)]
+    pub nro_args: Vec<String>,
+}
 
+/// Handle the `link` subcommand.
 #[tokio::main(flavor = "current_thread")]
 pub async fn handle_subcommand(
-    CargoNxLink {
+    Args {
         address,
         retries,
         path,
@@ -23,13 +51,8 @@ pub async fn handle_subcommand(
         server,
         nro_file,
         mut nro_args,
-    }: CargoNxLink,
+    }: Args,
 ) {
-    // Set up the logger
-    tracing_subscriber::fmt()
-        .with_env_filter(EnvFilter::from_default_env())
-        .init();
-
     tracing::debug!("File path: {}", nro_file.display());
 
     // Check if the file exists
@@ -67,7 +90,7 @@ pub async fn handle_subcommand(
     // Otherwise, if the path ends with a `/`, join the file name to the path
     let dest_path = match path {
         Some(path) => {
-            let mut path_str = if path.extension().map_or(false, |ext| ext == "nro") {
+            if path.extension().map_or(false, |ext| ext == "nro") {
                 path.to_str()
                     .expect("Failed to convert path to string")
                     .to_string()
@@ -79,30 +102,13 @@ pub async fn handle_subcommand(
             } else {
                 eprintln!("Invalid path: {}", path.display());
                 return;
-            };
-
-            // The netloader server writes the files to the `sdmc:/switch/` directory.
-            // Remove any unnecessary prefixes:
-            // - Remove the 'sdmc:` prefix if present
-            if path_str.starts_with("sdmc:") {
-                path_str = path_str.trim_start_matches("sdmc:").to_string();
             }
-            // - Remove if it starts with a `/`
-            if path_str.starts_with('/') {
-                path_str = path_str.trim_start_matches('/').to_string();
-            }
-            // - Remove the 'switch/' prefix if present
-            if path_str.starts_with("switch/") {
-                path_str = path_str.trim_start_matches("switch/").to_string();
-            }
-
-            path_str
         }
         // Otherwise, use the NRO file name
         None => nro_file_name,
     };
 
-    tracing::debug!("Destination path: sdmc:/switch/{}", dest_path);
+    tracing::debug!("Destination path: {}", dest_path);
 
     // Open the file for reading
     let mut file = match std::fs::File::open(nro_file) {
@@ -162,13 +168,11 @@ pub async fn handle_subcommand(
                 }
                 Err(err) => {
                     eprintln!("Failed to send the file: {err}");
-                    return;
                 }
             }
         }
         _ = tokio::signal::ctrl_c() => {
             eprintln!("Aborted by the user");
-            return;
         }
     }
 
@@ -178,18 +182,8 @@ pub async fn handle_subcommand(
 
         let stdio_server_addr = (Ipv4Addr::UNSPECIFIED, netloader::CLIENT_PORT);
         tokio::select! {biased;
-            res = netloader::stdio::start_server(stdio_server_addr) => {
-                if let Err(err) = res {
-                    eprintln!("Failed to start the nxlink stdio server: {err}");
-                    return;
-                } else {
-                    println!("Connection closed. Exiting...");
-                    return;
-                }
-            }
-            _ = tokio::signal::ctrl_c() => {
-                return;
-            }
+            _ = netloader::stdio::start_server(stdio_server_addr) => {}
+            _ = tokio::signal::ctrl_c() => {}
         }
     }
 }
