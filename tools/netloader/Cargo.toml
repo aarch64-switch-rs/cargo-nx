@@ -2,6 +2,7 @@
 name = "netloader"
 version = "0.1.0"
 edition = "2021"
+authors = ["LNSD"]
 
 [dependencies]
 flate2 = "1.0"
