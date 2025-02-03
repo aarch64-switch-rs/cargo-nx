@@ -26,9 +26,9 @@ pub struct Args {
     /// Builds using the release profile.
     #[arg(short, long)]
     pub release: bool,
-    /// The path to the project to build.
-    #[arg(short, long, default_value = ".", value_name = "DIR", value_parser)]
-    pub path: PathBuf,
+    /// The package name of the project to build.
+    #[arg(short, long, value_name = "DIR", value_parser)]
+    pub package: Option<String>,
     /// The custom target triple to use, if any.
     #[arg(short, long)]
     pub target: Option<String>,
@@ -40,28 +40,14 @@ pub struct Args {
 /// Handle the `build` subcommand.
 pub fn handle_subcommand(args: Args) {
     let metadata = MetadataCommand::new()
-        .manifest_path(args.path.join("Cargo.toml"))
+        .manifest_path("./Cargo.toml")
         .no_deps()
         .exec()
         .unwrap();
-
-    let metadata_v = &metadata.packages[0].metadata;
-
-    let is_nsp = metadata_v.pointer("/nx/nsp").is_some();
-    let is_nro = metadata_v.pointer("/nx/nro").is_some();
-    if is_nsp && is_nro {
-        panic!("Error: multiple target formats are not yet supported...");
-    } else if is_nsp {
-        println!("Building and generating NSP...");
-    } else if is_nro {
-        println!("Building and generating NRO...");
-    } else {
-        println!("Building...");
-    }
-
+    
     let rust_target_path = match std::env::var("RUST_TARGET_PATH") {
         Ok(s) => PathBuf::from(s),
-        Err(_) => metadata.workspace_root.clone(),
+        Err(_) => metadata.workspace_root.into_std_path_buf(),
     };
 
     let target = args.target.as_deref().unwrap_or(DEFAULT_TARGET_TRIPLE);
@@ -83,56 +69,89 @@ pub fn handle_subcommand(args: Args) {
         build_args.push(String::from("--release"));
     }
 
-    #[allow(clippy::zombie_processes)] // TODO: Fix `spawned process is never waited` clippy warning
-    let mut command = Command::new("cargo")
-        .args(&build_args)
-        .stdout(Stdio::piped())
-        .env("RUST_TARGET_PATH", build_target_path)
-        .current_dir(&args.path)
-        .spawn()
-        .unwrap();
+    let build_crates: Vec<Package> = match args.package {
+        Some(target_package) => {
+            vec![metadata
+                .packages
+                .iter()
+                .find(|needle| needle.name == target_package)
+                .unwrap_or_else(|| panic!("Failed to find package {target_package}"))
+                .clone()]
+        }
+        None => metadata.packages.to_vec(),
+    };
 
-    let reader = BufReader::new(command.stdout.take().unwrap());
-    for message in Message::parse_stream(reader) {
-        match message {
-            Ok(Message::CompilerArtifact(ref artifact)) => {
-                if artifact.target.kind.contains(&"bin".into())
-                    || artifact.target.kind.contains(&"cdylib".into())
-                {
-                    let package: &Package = match metadata
-                        .packages
-                        .iter()
-                        .find(|v| v.id == artifact.package_id)
+    for build_crate in build_crates {
+        let mut build_args = build_args.clone();
+        build_args.extend_from_slice(&[String::from("-p"), build_crate.name]);
+
+        let metadata_v = build_crate.metadata;
+
+        let is_nsp = metadata_v.pointer("/nx/nsp").is_some();
+        let is_nro = metadata_v.pointer("/nx/nro").is_some();
+        if is_nsp && is_nro {
+            panic!("Error: multiple target formats are not yet supported...");
+        } else if is_nsp {
+            println!("Building and generating NSP...");
+        } else if is_nro {
+            println!("Building and generating NRO...");
+        } else {
+            println!("Building...");
+        }
+
+        #[allow(clippy::zombie_processes)]
+        // TODO: Fix `spawned process is never waited` clippy warning
+        let mut command = Command::new("cargo")
+            .args(&build_args)
+            .stdout(Stdio::piped())
+            .env("RUST_TARGET_PATH", build_target_path)
+            .spawn()
+            .unwrap();
+
+        let reader = BufReader::new(command.stdout.take().unwrap());
+        for message in Message::parse_stream(reader) {
+            match message {
+                Ok(Message::CompilerArtifact(ref artifact)) => {
+                    if artifact.target.kind.contains(&"bin".into())
+                        || artifact.target.kind.contains(&"cdylib".into())
                     {
-                        Some(v) => v,
-                        None => continue,
-                    };
+                        let package: &Package = match metadata
+                            .packages
+                            .iter()
+                            .find(|v| v.id == artifact.package_id)
+                        {
+                            Some(v) => v,
+                            None => continue,
+                        };
 
-                    let root = package.manifest_path.parent().unwrap();
+                        let root = package.manifest_path.parent().unwrap();
 
-                    if is_nsp {
-                        let nsp_metadata: NspMetadata =
-                            serde_json::from_value(metadata_v.pointer("/nx/nsp").cloned().unwrap())
-                                .unwrap_or_default();
-                        handle_nsp_format(root, artifact, nsp_metadata);
-                    } else if is_nro {
-                        let nro_metadata: NroMetadata =
-                            serde_json::from_value(metadata_v.pointer("/nx/nro").cloned().unwrap())
-                                .unwrap_or_default();
-                        handle_nro_format(root, artifact, nro_metadata);
+                        if is_nsp {
+                            let nsp_metadata: NspMetadata = serde_json::from_value(
+                                metadata_v.pointer("/nx/nsp").cloned().unwrap(),
+                            )
+                            .unwrap_or_default();
+                            handle_nsp_format(root.as_std_path(), artifact, nsp_metadata);
+                        } else if is_nro {
+                            let nro_metadata: NroMetadata = serde_json::from_value(
+                                metadata_v.pointer("/nx/nro").cloned().unwrap(),
+                            )
+                            .unwrap_or_default();
+                            handle_nro_format(root.as_std_path(), artifact, nro_metadata);
+                        }
                     }
                 }
-            }
-            Ok(Message::CompilerMessage(msg)) => {
-                if let Some(msg) = msg.message.rendered {
-                    println!("{}", msg);
-                } else {
-                    println!("{:?}", msg);
+                Ok(Message::CompilerMessage(msg)) => {
+                    if let Some(msg) = msg.message.rendered {
+                        println!("{}", msg);
+                    } else {
+                        println!("{:?}", msg);
+                    }
                 }
-            }
-            Ok(_) => (),
-            Err(err) => {
-                panic!("{:?}", err);
+                Ok(_) => (),
+                Err(err) => {
+                    panic!("{:?}", err);
+                }
             }
         }
     }
@@ -154,7 +173,7 @@ struct NroMetadata {
 fn get_output_elf_path_as(artifact: &Artifact, extension: &str) -> PathBuf {
     let mut elf = artifact.filenames[0].clone();
     assert!(elf.set_extension(extension));
-    elf
+    elf.into_std_path_buf()
 }
 
 fn handle_nro_format(root: &Path, artifact: &Artifact, metadata: NroMetadata) {
@@ -182,10 +201,10 @@ fn handle_nro_format(root: &Path, artifact: &Artifact, metadata: NroMetadata) {
         }
     };
 
-    Nxo::from_elf(elf.to_str().unwrap())
+    Nxo::from_elf(elf.as_str())
         .unwrap()
         .write_nro(
-            &mut File::create(nro.clone()).unwrap(),
+            &mut File::create(nro.as_path()).unwrap(),
             romfs,
             icon.as_deref(),
             metadata.nacp,
@@ -225,12 +244,12 @@ fn handle_nsp_format(root: &Path, artifact: &Artifact, metadata: NspMetadata) {
         .unwrap();
     npdm.into_npdm(&mut out_file, AcidBehavior::Empty).unwrap();
 
-    Nxo::from_elf(elf.to_str().unwrap())
+    Nxo::from_elf(elf.as_str())
         .unwrap()
         .write_nso(&mut File::create(main_exe).unwrap())
         .unwrap();
 
-    let mut nsp = Pfs0::from_directory(exefs_dir.to_str().unwrap()).unwrap();
+    let mut nsp = Pfs0::from_directory(exefs_dir.as_str()).unwrap();
     let mut option = OpenOptions::new();
     let output_option = option.write(true).create(true).truncate(true);
     nsp.write_pfs0(
