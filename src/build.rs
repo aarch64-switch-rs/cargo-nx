@@ -168,6 +168,7 @@ struct NroMetadata {
     romfs: Option<String>,
     icon: Option<String>,
     nacp: Option<Nacp>,
+    overlay: Option<bool>
 }
 
 fn get_output_elf_path_as(artifact: &Artifact, extension: &str) -> PathBuf {
@@ -178,7 +179,7 @@ fn get_output_elf_path_as(artifact: &Artifact, extension: &str) -> PathBuf {
 
 fn handle_nro_format(root: &Path, artifact: &Artifact, metadata: NroMetadata) {
     let elf = artifact.filenames[0].clone();
-    let nro = get_output_elf_path_as(artifact, "nro");
+    let nro = get_output_elf_path_as(artifact, if metadata.overlay == Some(true) { "ovl" } else { "nro" });
 
     let romfs = metadata
         .romfs
