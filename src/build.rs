@@ -35,6 +35,12 @@ pub struct Args {
     /// Displays extra information during the build process.
     #[arg(short, long)]
     pub verbose: bool,
+    /// Passes on the requested features to `cargo build`
+    #[arg(long, value_parser)]
+    pub features: Option<String>,
+    /// Passes the `all-features` flag to `cargo build`
+    #[arg(long)]
+    pub all_features: bool
 }
 
 /// Handle the `build` subcommand.
@@ -84,6 +90,13 @@ pub fn handle_subcommand(args: Args) {
     for build_crate in build_crates {
         let mut build_args = build_args.clone();
         build_args.extend_from_slice(&[String::from("-p"), build_crate.name]);
+        if args.all_features {
+            build_args.push("--all-features".to_string());
+        }
+
+        if let Some(features) = args.features.as_ref() {
+            build_args.extend_from_slice(&[String::from("--features"), features.clone()]);
+        } 
 
         let metadata_v = build_crate.metadata;
 
